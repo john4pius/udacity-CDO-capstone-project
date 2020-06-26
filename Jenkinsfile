@@ -5,9 +5,6 @@ pipeline {
          stage('Build') {
              steps {
                  sh 'echo "Udacity Capstone Project"'
-                 sh '''
-                     echo "Multiline shell steps works too"
-                 '''
              }
          }
 
