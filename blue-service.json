@@ -1,0 +1,20 @@
+{
+    "kind": "Service",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "bluegreenloadbalancer",
+        "labels": {
+            "app": "bluegreenloadbalancer"
+        }
+    },
+    "spec": {
+        "ports": [{
+            "port": 8000,
+            "targetPort": 80
+        }],
+        "selector": {
+            "app": "blue"
+        },
+        "type": "LoadBalancer"
+    }
+}

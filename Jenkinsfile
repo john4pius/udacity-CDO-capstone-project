@@ -1,43 +1,94 @@
- 
 pipeline {
      agent any
      stages {
-         stage('Build') {
-             steps {
-                 sh 'echo "Udacity Capstone Project"'
-             }
-         }
-
-		 stage('Create kubernetes cluster') {
+        stage('Lint HTML') {
 			steps {
-				withAWS(region:'us-east-2',credentials:'aws-credential') {
+				sh 'tidy -q -e *.html'
+			}
+		}
+
+		stage('Security Scan') {
+            steps { 
+                aquaMicroscanner imageName: 'alpine:latest', notCompliesCmd: 'exit 1', onDisallowed: 'fail', outputFormat: 'html'
+            }
+        }
+		
+		stage('Build Docker Image') {
+			steps {
+				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'docker-credential', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD']]){
 					sh '''
-						eksctl create cluster \
-						--name CDO-capstonecluster \
-						--version 1.16 \
-						--nodegroup-name standard-workers \
-						--node-type t2.micro \
-						--nodes 2 \
-						--nodes-min 1 \
-						--nodes-max 3 \
-						--region us-east-2 \
-						--zones us-east-2a \
-						--zones us-east-2b \
-						--zones us-east-2c \
+						docker build -t john4pius/capstone .
 					'''
 				}
 			}
 		}
 
-		stage('Create conf file cluster') {
+		stage('Push Image To Dockerhub') {
+			steps {
+				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'docker-credential', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD']]){
+					sh '''
+						docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+						docker push john4pius/capstone
+					'''
+				}
+			}
+		}
+
+		stage('Set current kubectl context') {
 			steps {
 				withAWS(region:'us-east-2', credentials:'aws-credential') {
 					sh '''
-						aws eks --region us-east-2 update-kubeconfig --name CDO-capstonecluster
+						kubectl config use-context arn:aws:eks:us-east-2:070744867693:cluster/CDO-capstonecluster
 					'''
 				}
 			}
 		}
-                 
-     }
+
+		stage('Deploy blue container') {
+			steps {
+				withAWS(region:'us-east-2', credentials:'aws-credential') {
+					sh '''
+						kubectl apply -f ./blue-controller.json
+					'''
+				}
+			}
+		}
+
+		stage('Deploy green container') {
+			steps {
+				withAWS(region:'us-east-2', credentials:'aws-credential') {
+					sh '''
+						kubectl apply -f ./green-controller.json
+					'''
+				}
+			}
+		}
+
+		stage('Create the service in the cluster, redirect to blue') {
+			steps {
+				withAWS(region:'us-east-2', credentials:'aws-credential') {
+					sh '''
+						kubectl apply -f ./blue-service.json
+					'''
+				}
+			}
+		}
+
+		stage('Wait user approve') {
+            steps {
+                input "Ready to redirect traffic to green?"
+            }
+        }
+
+		stage('Create the service in the cluster, redirect to green') {
+			steps {
+				withAWS(region:'us-east-2', credentials:'aws-credential') {
+					sh '''
+						kubectl apply -f ./green-service.json
+					'''
+				}
+			}
+		}
+
+	}
 }
