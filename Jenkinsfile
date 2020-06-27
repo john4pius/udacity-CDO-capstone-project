@@ -11,7 +11,7 @@ pipeline {
 			steps {
 				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD']]){
 					sh '''
-						docker build -t john4pius/CDO-capstone .
+						docker build -t john4pius/cdo-capstone .
 					'''
 				}
 			}
@@ -22,7 +22,7 @@ pipeline {
 				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD']]){
 					sh '''
 						docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-						docker push john4pius/CDO-capstone
+						docker push john4pius/cdo-capstone
 					'''
 				}
 			}
@@ -32,7 +32,7 @@ pipeline {
 			steps {
 				withAWS(region:'us-east-2', credentials:'aws-credential') {
 					sh '''
-						kubectl config use-context arn:aws:eks:us-east-2:070744867693:cluster/CDO-capstonecluster
+						kubectl config use-context arn:aws:eks:us-east-2:070744867693:cluster/cdo-capstonecluster
 					'''
 				}
 			}
