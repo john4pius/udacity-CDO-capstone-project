@@ -1,4 +1,4 @@
-# UDACITY CLOUD DEVOPS CAPSTONE PROJECT
+# Udacity Cloud devOps Capstone Project
 
 In this project I developed a CI/CD pipeline for micro services applications with blue/green deployment.
 
@@ -48,7 +48,7 @@ The following files and folders could be found in the github repositary for this
 
 * Jenkinsfile:  use to create and configure kubernetes cluster in AWS using EKS.;
 
-1. deployment
+2. deployment
 
 * blue*controller.json: Blue pod replication controller
 * blue*service.json: Blue service
@@ -58,7 +58,7 @@ The following files and folders could be found in the github repositary for this
 * index.html:  index file of the website.
 * Jenkinsfile: use to design the pipelines for all stages.
 
-1. Project Screenshots
+3. Project Screenshots
 
 * This folders contains all the screen shots taking while implementing the pipelines.
 
